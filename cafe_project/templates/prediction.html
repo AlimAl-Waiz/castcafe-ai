@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="container">
+   <div class="page-header">
+  <div class="page-header">
+    <div>
+        <p class="page-kicker">CastCafe AI</p>
+        <h2>Prediction</h2>
+        <p class="page-subtitle">Cafe Demand Prediction and Inventory Manager</p>
+        <p class="page-description">Forecast demand trends, review selected product performance, and monitor AI-driven insights.</p>
+    </div>
+        <div class="page-meta">
+            <p><strong>Café:</strong> {{ session.get("cafe_name", "No café assigned") }}</p>
+            <p><strong>User:</strong> {{ session.get("username", "Unknown") }}</p>
+        </div>
+    </div>
+
+    <nav>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/inventory">Inventory</a>
+        <a href="/prediction">Prediction</a>
+        <a href="/report">Report</a>
+        <a href="/logout">Logout</a>
+    </nav>
+
+    <div class="prediction-top">
+        <div class="mini-card blue-card">
+            <h4>Predicted Sales</h4>
+            <p>{{ predicted_sales ~ " Cups" if predicted_sales is not none else "No prediction yet" }}</p>
+        </div>
+
+        <div class="mini-card purple-card">
+            <h4>Restock Focus</h4>
+            <p>{{ recommendation if recommendation else "No recommendation yet" }}</p>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card feature-card">
+            <label for="productSelector"><strong>Select Product</strong></label>
+            <p class="card-subtext">Choose a product to view product-specific chart behaviour and AI insight updates.</p>
+            <select id="productSelector" onchange="updateSelectedProduct()">
+                <option value="">All Products</option>
+                {% for product in product_options %}
+                    <option value="{{ product }}">{{ product }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="card feature-card">
+            <h3>Selected Product Insight</h3>
+            <p id="selectedProductText">No product selected.</p>
+        </div>
+    </div>
+
+    <div class="ai-grid"
+         id="aiDefaults"
+         data-demand-level='{{ (demand_level if demand_level else "No data yet")|tojson|safe }}'
+         data-trend='{{ (demand_trend if demand_trend else "Upload a dataset to generate trend insight.")|tojson|safe }}'
+         data-priority-item='{{ (priority_item if priority_item else "No data yet")|tojson|safe }}'
+         data-ai-action='{{ (ai_action if ai_action else "Upload a dataset to generate recommendations.")|tojson|safe }}'>
+
+        <div class="ai-card">
+            <h4>AI Demand Insight</h4>
+            <p><span class="ai-highlight">Demand Level:</span> <span id="aiDemandLevel">{{ demand_level if demand_level else "No data yet" }}</span></p>
+            <p><span class="ai-highlight">Trend:</span> <span id="aiTrendText">{{ demand_trend if demand_trend else "Upload a dataset to generate trend insight." }}</span></p>
+        </div>
+
+        <div class="ai-card">
+            <h4>AI Restock Insight</h4>
+            <p><span class="ai-highlight">Priority Item:</span> <span id="aiPriorityItem">{{ priority_item if priority_item else "No data yet" }}</span></p>
+            <p><span class="ai-highlight">Suggested Action:</span> <span id="aiActionText">{{ ai_action if ai_action else "Upload a dataset to generate recommendations." }}</span></p>
+        </div>
+    </div>
+
+    <div class="prediction-main-grid">
+        <div class="card chart-card">
+            <h3>Interactive Forecast Chart</h3>
+
+            {% if chart_labels and chart_values %}
+                <div class="chart-box">
+                    <canvas
+                        id="salesChart"
+                        data-labels='{{ chart_labels|tojson|safe }}'
+                        data-values='{{ chart_values|tojson|safe }}'
+                        data-product-chart='{{ product_chart_data|tojson|safe }}'>
+                    </canvas>
+                </div>
+                <p class="chart-note">Hover over the graph to view exact daily sales values.</p>
+            {% else %}
+                <p>No chart data yet. Please upload a dataset first.</p>
+            {% endif %}
+
+            <p class="chart-note">
+                <strong>Estimated demand for tomorrow:</strong>
+                {{ predicted_sales ~ " Cups" if predicted_sales is not none else "No prediction yet" }}
+            </p>
+        </div>
+
+        <div class="prediction-side-panel">
+            <div class="card">
+                <h3>Prediction Summary</h3>
+                <p>{{ prediction_summary }}</p>
+                <p class="card-subtext">This forecast is generated from uploaded historical café sales data.</p>
+            </div>
+
+            <div class="card">
+                <h3>Recommended Stock</h3>
+                <div class="prediction-stock-list">
+                    <p>Milk: {{ recommended_stock["Milk"] }}</p>
+                    <p>Sugar: {{ recommended_stock["Sugar"] }}</p>
+                    <p>Coffee Beans: {{ recommended_stock["Coffee Beans"] }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let salesChartInstance = null;
+
+function updateSelectedProduct() {
+    const selector = document.getElementById("productSelector");
+    const output = document.getElementById("selectedProductText");
+    const chartCanvas = document.getElementById("salesChart");
+    const selected = selector.value;
+
+    const aiDemandLevel = document.getElementById("aiDemandLevel");
+    const aiTrendText = document.getElementById("aiTrendText");
+    const aiPriorityItem = document.getElementById("aiPriorityItem");
+    const aiActionText = document.getElementById("aiActionText");
+    const aiDefaults = document.getElementById("aiDefaults");
+
+    if (!chartCanvas) return;
+
+    const defaultLabels = JSON.parse(chartCanvas.dataset.labels || "[]");
+    const defaultValues = JSON.parse(chartCanvas.dataset.values || "[]");
+    const productChartData = JSON.parse(chartCanvas.dataset.productChart || "{}");
+
+    let labels = defaultLabels;
+    let values = defaultValues;
+    let chartTitle = "Daily Sales";
+
+    if (selected && productChartData[selected]) {
+        labels = productChartData[selected].labels || [];
+        values = productChartData[selected].values || [];
+        chartTitle = selected + " Sales";
+
+        output.textContent = "Selected product: " + selected + ". The chart now shows product-specific demand trend.";
+
+        const totalSales = values.reduce((a, b) => a + b, 0);
+        const avgSales = values.length ? totalSales / values.length : 0;
+
+        if (avgSales < 5) {
+            aiDemandLevel.textContent = "Low";
+            aiTrendText.textContent = "Selected product shows lighter sales activity in the uploaded period.";
+            aiPriorityItem.textContent = selected;
+            aiActionText.textContent = "Monitor this item, but urgent restock may not be needed yet.";
+        } else if (avgSales < 12) {
+            aiDemandLevel.textContent = "Moderate";
+            aiTrendText.textContent = "Selected product shows steady movement across the uploaded period.";
+            aiPriorityItem.textContent = selected;
+            aiActionText.textContent = "Prepare moderate stock coverage for this selected product.";
+        } else {
+            aiDemandLevel.textContent = "High";
+            aiTrendText.textContent = "Selected product is one of the stronger demand items in the uploaded period.";
+            aiPriorityItem.textContent = selected;
+            aiActionText.textContent = "Prioritize this item during restock planning because demand is relatively strong.";
+        }
+    } else {
+        output.textContent = "No product selected. Showing all-product daily sales trend.";
+        aiDemandLevel.textContent = JSON.parse(aiDefaults.dataset.demandLevel || '"No data yet"');
+        aiTrendText.textContent = JSON.parse(aiDefaults.dataset.trend || '"Upload a dataset to generate trend insight."');
+        aiPriorityItem.textContent = JSON.parse(aiDefaults.dataset.priorityItem || '"No data yet"');
+        aiActionText.textContent = JSON.parse(aiDefaults.dataset.aiAction || '"Upload a dataset to generate recommendations."');
+    }
+
+    renderChart(labels, values, chartTitle);
+}
+
+function renderChart(labels, values, labelText) {
+    const chartCanvas = document.getElementById("salesChart");
+    if (!chartCanvas) return;
+
+    const ctx = chartCanvas.getContext("2d");
+
+    if (salesChartInstance) {
+        salesChartInstance.destroy();
+    }
+
+    salesChartInstance = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: labelText,
+                data: values,
+                tension: 0.3,
+                fill: false,
+                borderWidth: 3,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true
+                },
+                tooltip: {
+                    enabled: true
+                }
+            },
+            interaction: {
+                mode: "nearest",
+                intersect: false
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: "Date"
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: "Sales"
+                    },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+const chartCanvas = document.getElementById("salesChart");
+
+if (chartCanvas) {
+    const chartLabels = JSON.parse(chartCanvas.dataset.labels || "[]");
+    const chartValues = JSON.parse(chartCanvas.dataset.values || "[]");
+    renderChart(chartLabels, chartValues, "Daily Sales");
+}
+</script>
+</body>
+</html>

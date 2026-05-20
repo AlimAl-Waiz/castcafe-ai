@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Styles.css') }}">
+</head>
+<body>
+<div class="container">
+    <div class="page-header">
+    <div>
+        <p class="page-kicker">CastCafe AI</p>
+        <h2>Inventory</h2>
+        <p class="page-subtitle">Cafe Demand Prediction and Inventory Manager</p>
+        <p class="page-description">Monitor stock levels, filter item status, and update remaining inventory records.</p>
+    </div>
+        <div class="page-meta">
+            <p><strong>Café:</strong> {{ session.get("cafe_name", "No café assigned") }}</p>
+            <p><strong>User:</strong> {{ session.get("username", "Unknown") }}</p>
+        </div>
+    </div>
+
+    <nav>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/inventory">Inventory</a>
+        <a href="/prediction">Prediction</a>
+        <a href="/report">Report</a>
+        <a href="/logout">Logout</a>
+    </nav>
+
+    <div class="inventory-summary-grid">
+        <div class="mini-card blue-card">
+            <h4>Total Items</h4>
+            <p>{{ inventory_rows|length if inventory_rows else 0 }}</p>
+        </div>
+
+        <div class="mini-card red-card">
+            <h4>Urgent Items</h4>
+            <p>{{ inventory_rows | selectattr("status", "equalto", "Urgent") | list | length if inventory_rows else 0 }}</p>
+        </div>
+
+        <div class="mini-card orange-card">
+            <h4>Restock Soon</h4>
+            <p>{{ inventory_rows | selectattr("status", "equalto", "Restock Soon") | list | length if inventory_rows else 0 }}</p>
+        </div>
+
+        <div class="mini-card green-card">
+            <h4>Sufficient</h4>
+            <p>{{ inventory_rows | selectattr("status", "equalto", "Sufficient") | list | length if inventory_rows else 0 }}</p>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card feature-card">
+            <h3>Search Inventory</h3>
+            <p class="card-subtext">Search for a stock item by name.</p>
+            <input type="text" id="inventorySearch" placeholder="Search item..." onkeyup="filterInventory()">
+        </div>
+
+        <div class="card feature-card">
+            <h3>Filter by Status</h3>
+            <p class="card-subtext">Quickly filter items by urgency and stock condition.</p>
+            <div class="filter-buttons">
+                <button type="button" onclick="filterByStatus('All')">All</button>
+                <button type="button" onclick="filterByStatus('Urgent')">Urgent</button>
+                <button type="button" onclick="filterByStatus('Restock Soon')">Restock Soon</button>
+                <button type="button" onclick="filterByStatus('Sufficient')">Sufficient</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="section-title-row">
+            <div>
+                <h3>Remaining Stock Levels</h3>
+                <p class="card-subtext">Review available stock and update counts directly from the table.</p>
+            </div>
+        </div>
+
+        <table id="inventoryTable">
+            <tr>
+                <th>Item</th>
+                <th>Remaining Stock</th>
+                <th>Status</th>
+                <th>Edit Stock</th>
+            </tr>
+
+            {% if inventory_rows %}
+                {% for row in inventory_rows %}
+                <tr data-status="{{ row.status }}">
+                    <td>{{ row.item }}</td>
+                    <td>{{ row.stock }}</td>
+                    <td>
+                        {% if row.status == "Urgent" %}
+                            <span class="inventory-badge badge-low">Urgent</span>
+                        {% elif row.status == "Restock Soon" %}
+                            <span class="inventory-badge badge-soon">Restock Soon</span>
+                        {% else %}
+                            <span class="inventory-badge badge-ok">Sufficient</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form action="/update_inventory" method="post" class="inventory-update-form">
+                            <input type="hidden" name="item_name" value="{{ row.item }}">
+                            <input type="number" name="new_stock" value="{{ row.stock }}" min="0">
+                            <button type="submit">Update</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="4" style="text-align:center;">No inventory data yet. Please upload a dataset first.</td>
+                </tr>
+            {% endif %}
+        </table>
+    </div>
+</div>
+
+<script>
+let currentStatusFilter = "All";
+
+function filterInventory() {
+    applyFilters();
+}
+
+function filterByStatus(status) {
+    currentStatusFilter = status;
+    applyFilters();
+}
+
+function applyFilters() {
+    let input = document.getElementById("inventorySearch");
+    let searchFilter = input.value.toLowerCase();
+    let table = document.getElementById("inventoryTable");
+    let tr = table.getElementsByTagName("tr");
+
+    for (let i = 1; i < tr.length; i++) {
+        let td = tr[i].getElementsByTagName("td")[0];
+        if (!td) continue;
+
+        let txtValue = td.textContent || td.innerText;
+        let rowStatus = tr[i].getAttribute("data-status");
+
+        let matchesSearch = txtValue.toLowerCase().includes(searchFilter);
+        let matchesStatus = currentStatusFilter === "All" || rowStatus === currentStatusFilter;
+
+        tr[i].style.display = (matchesSearch && matchesStatus) ? "" : "none";
+    }
+}
+</script>
+</body>
+</html>

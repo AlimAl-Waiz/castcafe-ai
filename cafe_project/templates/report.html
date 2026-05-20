@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Styles.css') }}">
+</head>
+<body>
+<div class="container">
+    <div class="page-header">
+    <div>
+        <p class="page-kicker">CastCAfe AI</p>
+        <h2>Report</h2>
+        <p class="page-subtitle">Cafe Demand Prediction and Inventory Manager</p>
+        <p class="page-description">Business summary of demand, stock condition, prediction quality, and recommended operational actions.</p>
+    </div>
+        <div class="page-meta">
+            <p><strong>Café:</strong> {{ session.get("cafe_name", "No café assigned") }}</p>
+            <p><strong>User:</strong> {{ session.get("username", "Unknown") }}</p>
+        </div>
+    </div>
+
+    <nav>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/inventory">Inventory</a>
+        <a href="/prediction">Prediction</a>
+        <a href="/report">Report</a>
+        <a href="/logout">Logout</a>
+    </nav>
+
+    <div class="report-top">
+        <div class="mini-card green-card">
+            <h4>Sales Summary</h4>
+            <p>{{ report_total_sales ~ " Cups" if report_total_sales is not none else "No data yet" }}</p>
+        </div>
+
+        <div class="mini-card teal-card">
+            <h4>Best-Selling Item</h4>
+            <p>{{ best_selling_item if best_selling_item else "No data yet" }}</p>
+        </div>
+    </div>
+
+    <div class="report-middle">
+        <div class="card report-box">
+            <h3>Prediction Summary</h3>
+            <p><strong>Model Accuracy:</strong> {{ prediction_accuracy }}</p>
+            <p class="card-subtext">This result is based on uploaded historical café sales data and the selected forecasting logic.</p>
+        </div>
+
+        <div class="card report-box">
+            <h3>Inventory Summary</h3>
+            <p><strong>Low Stock Items:</strong> {{ report_low_stock if report_low_stock else "No data yet" }}</p>
+            <p><strong>Recommended Ingredient Restock:</strong> {{ report_restock if report_restock else "No recommendation yet" }}</p>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card feature-card">
+            <h3>AI Business Summary</h3>
+
+            <p>
+                <strong>Demand Overview:</strong>
+                The current uploaded dataset indicates
+                {{ "stronger" if report_total_sales and report_total_sales > 150 else "moderate" if report_total_sales and report_total_sales > 70 else "lighter" if report_total_sales else "no available" }}
+                sales activity.
+            </p>
+
+            <p>
+                <strong>Top Product Focus:</strong>
+                {{ best_selling_item if best_selling_item else "No item detected yet" }}
+                appears to be one of the strongest-performing items based on the uploaded records.
+            </p>
+
+            <p>
+                <strong>Stock Insight:</strong>
+                {% if report_low_stock and report_low_stock != "No low stock items detected." %}
+                    {{ report_low_stock }}
+                {% else %}
+                    No urgent low-stock items detected.
+                {% endif %}
+            </p>
+
+            <p>
+                <strong>Suggested Action:</strong>
+                {% if report_low_stock and report_low_stock != "No low stock items detected." %}
+                    Prioritize restocking essential low-stock ingredients to support continued sales demand and reduce stockout risk.
+                {% else %}
+                    Inventory levels are currently stable. Maintain routine stock monitoring and demand tracking.
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="card feature-card ai-focus-card">
+            <h3>Report Interpretation</h3>
+            <p>This report combines sales trend analysis, stock-risk detection, and recommendation support to help café staff make better daily preparation and restocking decisions.</p>
+            <p class="card-subtext">Use this summary as a final management view before download or presentation.</p>
+        </div>
+    </div>
+
+    <div class="report-actions">
+        <a class="btn-link" href="/download_report">Download Report</a>
+    </div>
+</div>
+</body>
+</html>

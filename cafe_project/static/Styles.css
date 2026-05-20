@@ -1,0 +1,659 @@
+/* ========================================
+   1. GENERAL / GLOBAL STYLES
+======================================== */
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(180deg, #f7f6fb 0%, #f1f3f6 100%);
+    margin: 0;
+    padding: 24px;
+    color: #222;
+}
+
+.container {
+    max-width: 1180px;
+    margin: 0 auto;
+    background: #ffffff;
+    padding: 28px;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(24, 32, 56, 0.08);
+}
+
+h1, h2 {
+    color: #2f2a40;
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 2rem;
+}
+
+h3 {
+    color: #1f2430;
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 1.08rem;
+}
+
+h4 {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.page-kicker {
+    margin: 0 0 8px 0;
+    color: #6c63a8;
+    font-size: 0.86rem;
+    font-weight: bold;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.page-subtitle {
+    margin: 0;
+    color: #6c7280;
+    font-size: 0.98rem;
+    line-height: 1.5;
+    max-width: 680px;
+}
+
+.page-meta {
+    background: #f8f7fd;
+    border: 1px solid #ece9fb;
+    border-radius: 16px;
+    padding: 14px 16px;
+    min-width: 240px;
+}
+
+.page-meta p {
+    margin: 6px 0;
+    color: #374151;
+}
+
+.card {
+    background: #f7f8fb;
+    padding: 22px;
+    border-radius: 18px;
+    margin-bottom: 22px;
+    border: 1px solid #eceff5;
+}
+
+.card-subtext {
+    margin-top: -4px;
+    margin-bottom: 14px;
+    color: #6b7280;
+    font-size: 0.94rem;
+    line-height: 1.5;
+}
+
+.section-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+    gap: 18px;
+}
+
+.info-label {
+    margin: 0 0 6px 0;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+}
+
+form {
+    margin: 0;
+}
+
+/* ========================================
+   2. NAVIGATION
+======================================== */
+nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 14px 16px;
+    margin: 18px 0 28px 0;
+    border: 1px solid #eceff5;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+nav a {
+    text-decoration: none;
+    color: #5c5470;
+    font-weight: bold;
+    font-size: 0.98rem;
+    padding: 8px 12px;
+    border-radius: 10px;
+    transition: 0.2s ease;
+}
+
+nav a:hover {
+    background: #f1eefb;
+    color: #4338ca;
+}
+
+/* ========================================
+   3. BUTTONS AND INPUTS
+======================================== */
+button,
+.btn-link {
+    background: linear-gradient(135deg, #6750a4 0%, #4f46e5 100%);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 1rem;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    box-shadow: 0 8px 18px rgba(79, 70, 229, 0.18);
+}
+
+button:hover,
+.btn-link:hover {
+    opacity: 0.94;
+}
+
+input[type="file"],
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+select {
+    width: 100%;
+    padding: 12px 14px;
+    margin-top: 8px;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+    border: 1px solid #d7dbe4;
+    border-radius: 12px;
+    font-size: 1rem;
+    background: #fff;
+}
+
+/* ========================================
+   4. TABLES
+======================================== */
+table,
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    overflow: hidden;
+    border-radius: 14px;
+}
+
+table th,
+table td,
+.table th,
+.table td {
+    border: 1px solid #e3e7ef;
+    padding: 14px 12px;
+    text-align: left;
+    font-size: 1rem;
+}
+
+table th,
+.table th {
+    background: #f3f5f9;
+    font-weight: bold;
+}
+
+.preview-wrapper {
+    overflow-x: auto;
+}
+
+/* ========================================
+   5. SHARED MINI CARDS
+======================================== */
+.mini-card {
+    border-radius: 18px;
+    overflow: hidden;
+    background: #edf1f7;
+    text-align: center;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+    min-height: 190px;
+    display: flex;
+    flex-direction: column;
+}
+
+.mini-card h4 {
+    padding: 12px 12px;
+    color: white;
+    font-weight: bold;
+    letter-spacing: 0.02em;
+}
+
+.mini-card p {
+    margin: 0;
+    padding: 18px 16px;
+    font-size: 1.12rem;
+    font-weight: bold;
+    color: #2b3240;
+    background: #edf1f7;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    word-break: break-word;
+    line-height: 1.45;
+}
+
+.blue-card h4 {
+    background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+}
+
+.red-card h4 {
+    background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+}
+
+.green-card h4 {
+    background: linear-gradient(135deg, #10b981 0%, #22c55e 100%);
+}
+
+.teal-card h4 {
+    background: linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%);
+}
+
+.orange-card h4 {
+    background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+}
+
+.purple-card h4 {
+    background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+}
+
+/* ========================================
+   6. DASHBOARD PAGE
+======================================== */
+.dashboard-top {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-bottom: 24px;
+    align-items: stretch;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+    margin-bottom: 22px;
+}
+
+.feature-card {
+    min-height: 180px;
+}
+
+.ai-focus-card {
+    background: linear-gradient(180deg, #f8f7ff 0%, #f2f1ff 100%);
+    border: 1px solid #dfdcff;
+}
+
+.upload-card {
+    background: linear-gradient(180deg, #fbfbff 0%, #f7f8fd 100%);
+}
+
+.upload-center {
+    text-align: left;
+}
+
+.upload-sections {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    justify-content: center;
+}
+
+.upload-panel {
+    background: #ffffff;
+    border: 1px solid #e8ebf2;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
+}
+
+.upload-panel h4 {
+    margin-bottom: 10px;
+    color: #2f2a40;
+    font-size: 1rem;
+}
+
+.upload-text {
+    color: #6b7280;
+    font-size: 0.93rem;
+    line-height: 1.5;
+    margin-bottom: 14px;
+}
+
+.forecast-summary {
+    text-align: left;
+}
+
+.message-box {
+    margin-top: 16px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.message-box.success {
+    background: #e6f7ea;
+    color: #1f7a3d;
+    border: 1px solid #b7e4c7;
+}
+
+.message-box.error {
+    background: #fdeaea;
+    color: #b42318;
+    border: 1px solid #f5b5b0;
+}
+
+/* ========================================
+   7. INVENTORY PAGE
+======================================== */
+.inventory-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-bottom: 24px;
+    align-items: stretch;
+}
+
+.inventory-badge {
+    display: inline-block;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 0.86rem;
+    font-weight: bold;
+}
+
+.badge-low {
+    background: #ffe0e0;
+    color: #c62828;
+}
+
+.badge-ok {
+    background: #e4f6e7;
+    color: #2e7d32;
+}
+
+.badge-soon {
+    background: #fff3cd;
+    color: #b26a00;
+}
+
+.filter-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.filter-buttons button {
+    min-width: 140px;
+}
+
+.inventory-update-form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.inventory-update-form input[type="number"] {
+    width: 95px;
+    margin: 0;
+}
+
+/* ========================================
+   8. PREDICTION PAGE
+======================================== */
+.prediction-top {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.prediction-main-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 22px;
+    align-items: start;
+}
+
+.prediction-side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.prediction-stock-list p {
+    margin: 10px 0;
+    font-weight: 600;
+}
+
+.ai-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(240px, 1fr));
+    gap: 18px;
+    margin-bottom: 22px;
+}
+
+.ai-card {
+    background: linear-gradient(180deg, #f7f7ff 0%, #f3f3ff 100%);
+    border: 1px solid #ddd9ff;
+    padding: 18px;
+    border-radius: 16px;
+}
+
+.ai-card h4 {
+    margin-bottom: 10px;
+    color: #4338ca;
+    font-size: 1rem;
+}
+
+.ai-card p {
+    margin: 6px 0;
+    line-height: 1.6;
+}
+
+.ai-highlight {
+    font-weight: bold;
+    color: #222;
+}
+
+.chart-card {
+    min-height: 520px;
+}
+
+.chart-box {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 14px;
+    margin-top: 12px;
+    border: 1px solid #eceff5;
+    height: 360px;
+}
+
+.chart-image {
+    width: 100%;
+    margin-top: 15px;
+    border-radius: 10px;
+    background: white;
+}
+
+.chart-note {
+    margin-top: 12px;
+    color: #555;
+    font-size: 0.95rem;
+}
+
+/* ========================================
+   9. REPORT PAGE
+======================================== */
+.report-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.report-middle {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+
+.report-box {
+    flex: 1;
+    min-width: 280px;
+}
+
+.report-actions {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* ========================================
+   10. RESPONSIVE / TABLET
+======================================== */
+@media (max-width: 900px) {
+    body {
+        padding: 16px;
+    }
+
+    .container {
+        max-width: 100%;
+        padding: 20px;
+        border-radius: 18px;
+    }
+
+    h1, h2 {
+        font-size: 1.7rem;
+    }
+
+    .page-header {
+        flex-direction: column;
+    }
+
+    .page-meta {
+        width: 100%;
+        min-width: unset;
+    }
+
+    nav {
+        gap: 10px;
+        padding: 12px 14px;
+    }
+
+    nav a {
+        font-size: 0.95rem;
+        padding: 6px 8px;
+    }
+
+    .card {
+        padding: 18px;
+        border-radius: 14px;
+    }
+
+    table th,
+    table td,
+    .table th,
+    .table td {
+        padding: 10px 8px;
+        font-size: 0.95rem;
+    }
+
+    button,
+    .btn-link {
+        width: 100%;
+    }
+
+    .dashboard-top,
+    .dashboard-grid,
+    .prediction-top,
+    .prediction-main-grid,
+    .report-top,
+    .report-middle,
+    .upload-sections,
+    .info-grid,
+    .inventory-summary-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .mini-card {
+        max-width: 100%;
+        min-width: 100%;
+        min-height: auto;
+    }
+
+    .mini-card p {
+        font-size: 1.05rem;
+    }
+
+    .ai-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .report-box {
+        min-width: 100%;
+    }
+
+    .report-actions {
+        flex-direction: column;
+    }
+
+    .inventory-update-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .inventory-update-form input[type="number"] {
+        width: 100%;
+    }
+
+    .chart-box {
+        height: 300px;
+    }
+}
+
+.page-description {
+    margin: 8px 0 0 0;
+    color: #6c7280;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    max-width: 700px;
+}

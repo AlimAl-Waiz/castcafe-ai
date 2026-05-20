@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Styles.css') }}">
+</head>
+<body>
+<div class="container">
+  <div class="page-header">
+    <div>
+        <p class="page-kicker">CastCafe AI</p>
+        <h2>Dashboard</h2>
+        <p class="page-subtitle">Cafe Demand Prediction and Inventory Manager</p>
+        <p class="page-description">Overview of sales demand, stock risk, and latest operational updates.</p>
+    </div>
+        <div class="page-meta">
+            <p><strong>Café:</strong> {{ session.get("cafe_name", "No café assigned") }}</p>
+            <p><strong>User:</strong> {{ session.get("username", "Unknown") }}</p>
+        </div>
+    </div>
+
+    <nav>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/inventory">Inventory</a>
+        <a href="/prediction">Prediction</a>
+        <a href="/report">Report</a>
+        <a href="/logout">Logout</a>
+    </nav>
+
+    <div class="dashboard-top">
+        <div class="mini-card blue-card">
+            <h4>Predicted Sales</h4>
+            <p>{{ sales ~ " Cups" if sales is not none else "No data yet" }}</p>
+        </div>
+
+        <div class="mini-card red-card">
+            <h4>Low Stock Alerts</h4>
+            <p>{{ stock }}</p>
+        </div>
+
+        <div class="mini-card green-card">
+            <h4>Top-Selling Item</h4>
+            <p>{{ best_selling_item if best_selling_item else "No data yet" }}</p>
+        </div>
+
+        <div class="mini-card teal-card">
+            <h4>Urgent Items</h4>
+            <p>{{ urgent_items_count if urgent_items_count is not none else "0" }}</p>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card feature-card">
+            <h3>Inventory Restock Recommendation</h3>
+            <p class="card-subtext">Key items that should be monitored or replenished soon.</p>
+            <p>{{ recommendation }}</p>
+        </div>
+
+        <div class="card feature-card ai-focus-card">
+            <h3>AI Recommendation</h3>
+            <p><strong>Demand Level:</strong> {{ demand_level if demand_level else "Moderate" }}</p>
+            <p><strong>Priority Item:</strong> {{ priority_item if priority_item else "Check low stock items" }}</p>
+            <p><strong>Suggested Action:</strong> {{ ai_action if ai_action else "Review inventory and prepare restock." }}</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Latest Update</h3>
+        <div class="info-grid">
+            <div>
+                <p class="info-label">Upload Status</p>
+                <p>{{ message if message else "No recent dataset upload detected." }}</p>
+            </div>
+            <div>
+                <p class="info-label">Current Predicted Demand</p>
+                <p>{{ sales ~ " Cups" if sales is not none else "No prediction yet" }}</p>
+            </div>
+            <div>
+                <p class="info-label">Current Stock Risk</p>
+                <p>{{ stock if stock else "No low stock items detected." }}</p>
+            </div>
+            <div>
+                <p class="info-label">Priority Focus Item</p>
+                <p>{{ priority_item if priority_item else "No priority item yet" }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card upload-card">
+        <div class="section-title-row">
+            <div>
+                <h3>Upload Data Files</h3>
+                <p class="card-subtext">Accepted file types: .csv, .xlsx</p>
+            </div>
+        </div>
+
+        <div class="upload-sections">
+            <form action="/upload" method="post" enctype="multipart/form-data" class="upload-panel">
+                <h4>Historical Sales Data</h4>
+                <p class="upload-text">Upload transaction records to generate predictions, trends, and best-selling item insights.</p>
+                <input type="file" name="sales_file" required>
+                <button type="submit">Upload Sales File</button>
+            </form>
+
+            <form action="/upload_inventory_file" method="post" enctype="multipart/form-data" class="upload-panel">
+                <h4>Inventory / Ingredients Data</h4>
+                <p class="upload-text">Upload stock records to calculate low-stock alerts, restock needs, and inventory summaries.</p>
+                <input type="file" name="inventory_file" required>
+                <button type="submit">Upload Inventory File</button>
+            </form>
+        </div>
+
+        {% if message %}
+        <div class="message-box {{ message_type if message_type else 'success' }}">
+            {{ message }}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="card forecast-summary">
+        <h3>Forecast Summary</h3>
+        <p>This dashboard presents the latest prediction outputs, stock-risk indicators, and restock suggestions generated from uploaded data.</p>
+        <p><strong>Estimated Next-Day Sales:</strong> {{ sales ~ " Cups" if sales is not none else "No prediction yet" }}</p>
+    </div>
+
+    {% if preview_table %}
+    <div class="card">
+        <div class="section-title-row">
+            <div>
+                <h3>Uploaded Data Preview</h3>
+                <p class="card-subtext">Preview of the latest uploaded sales dataset.</p>
+            </div>
+        </div>
+        <div class="preview-wrapper">
+            {{ preview_table|safe }}
+        </div>
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>
