@@ -29,6 +29,12 @@
         <a href="/logout">Logout</a>
     </nav>
 
+    {% if message %}
+    <div class="message-box {{ message_type if message_type else 'success' }}">
+        {{ message }}
+    </div>
+{% endif %}
+
     <div class="inventory-summary-grid">
         <div class="mini-card blue-card">
             <h4>Total Items</h4>

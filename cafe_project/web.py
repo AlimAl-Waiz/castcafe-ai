@@ -57,10 +57,11 @@ app_data = {
 # Database helpers
 # -----------------------------
 def get_db_connection():
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(DB_FILE, timeout=30, check_same_thread=False)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL;")
+    conn.execute("PRAGMA synchronous=NORMAL;")
     return conn
-
 
 def init_db():
     conn = get_db_connection()
@@ -85,6 +86,14 @@ def init_db():
         )
     """)
 
+    user_columns = [row[1] for row in cursor.execute("PRAGMA table_info(users)").fetchall()]
+
+    if "role" not in user_columns:
+        cursor.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'staff'")
+
+    if "cafe_name" not in user_columns:
+        cursor.execute("ALTER TABLE users ADD COLUMN cafe_name TEXT")
+
     conn.commit()
     conn.close()
 
@@ -102,13 +111,19 @@ def create_default_users():
     ]
 
     for username, password, role, cafe_name in default_users:
+        password_hash = generate_password_hash(password)
+
         existing_user = cursor.execute(
             "SELECT * FROM users WHERE username = ?",
             (username,)
         ).fetchone()
 
-        if not existing_user:
-            password_hash = generate_password_hash(password)
+        if existing_user:
+            cursor.execute(
+                "UPDATE users SET password_hash = ?, role = ?, cafe_name = ? WHERE username = ?",
+                (password_hash, role, cafe_name, username)
+            )
+        else:
             cursor.execute(
                 "INSERT INTO users (username, password_hash, role, cafe_name) VALUES (?, ?, ?, ?)",
                 (username, password_hash, role, cafe_name)
@@ -120,18 +135,19 @@ def create_default_users():
 
 def save_inventory_to_db(inventory_rows):
     conn = get_db_connection()
-    cursor = conn.cursor()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM inventory")
 
-    cursor.execute("DELETE FROM inventory")
+        for row in inventory_rows:
+            cursor.execute(
+                "INSERT INTO inventory (item, stock, status) VALUES (?, ?, ?)",
+                (str(row["item"]), int(row["stock"]), str(row["status"]))
+            )
 
-    for row in inventory_rows:
-        cursor.execute(
-            "INSERT INTO inventory (item, stock, status) VALUES (?, ?, ?)",
-            (str(row["item"]), int(row["stock"]), str(row["status"]))
-        )
-
-    conn.commit()
-    conn.close()
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def load_inventory_from_db():
@@ -787,43 +803,47 @@ def update_inventory():
     new_stock = request.form.get("new_stock")
 
     if not item_name or new_stock is None:
-        return render_template(
-            "inventory.html",
-            inventory_rows=app_data["inventory_rows"]
-        )
+        app_data["message"] = "Missing inventory update data."
+        app_data["message_type"] = "error"
+        return redirect(url_for("inventory"))
 
     try:
         new_stock = int(new_stock)
 
-        for row in app_data["inventory_rows"]:
-            if row["item"] == item_name:
-                row["stock"] = new_stock
-                if new_stock <= 50:
-                    row["status"] = "Urgent"
-                elif new_stock <= 150:
-                    row["status"] = "Restock Soon"
-                else:
-                    row["status"] = "Sufficient"
-                break
-
-        app_data["report_low_stock"] = ", ".join(
-            [row["item"] for row in app_data["inventory_rows"] if row["status"] in ["Urgent", "Restock Soon"]]
-        ) or "No low stock items detected."
-
         update_inventory_item_in_db(item_name, new_stock)
         refresh_inventory_from_db()
 
-        return render_template(
-            "inventory.html",
-            inventory_rows=app_data["inventory_rows"]
+        app_data["message"] = f"Stock updated for {item_name}."
+        app_data["message_type"] = "success"
+        return redirect(url_for("inventory"))
+
+    except Exception as e:
+        print("UPDATE INVENTORY ERROR:", e)
+        app_data["message"] = f"Could not update inventory: {str(e)}"
+        app_data["message_type"] = "error"
+        return redirect(url_for("inventory"))
+
+
+def update_inventory_item_in_db(item_name, new_stock):
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+
+        if int(new_stock) <= 50:
+            status = "Urgent"
+        elif int(new_stock) <= 150:
+            status = "Restock Soon"
+        else:
+            status = "Sufficient"
+
+        cursor.execute(
+            "UPDATE inventory SET stock = ?, status = ? WHERE item = ?",
+            (int(new_stock), status, item_name)
         )
 
-    except ValueError:
-        return render_template(
-            "inventory.html",
-            inventory_rows=app_data["inventory_rows"]
-        )
-
+        conn.commit()
+    finally:
+        conn.close()
 
 @app.route("/prediction")
 def prediction():
