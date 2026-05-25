@@ -51,7 +51,9 @@ app_data = {
     "chart_values": [],
     "product_options": [],
     "product_chart_data": {},
+    "latest_sales_file": None,
 }
+
 
 # -----------------------------
 # Database helpers
@@ -569,6 +571,87 @@ db_inventory = load_inventory_from_db()
 if db_inventory:
     refresh_inventory_from_db()
 
+
+    def get_filtered_report_data(start_date=None, end_date=None):
+        file_path = app_data.get("latest_sales_file")
+
+        if not file_path or not os.path.exists(file_path):
+            return None
+
+        df = load_uploaded_file(file_path)
+        df.columns = [str(col).strip().lower() for col in df.columns]
+
+        date_col = None
+        for col in ["transaction_date", "date", "order_date"]:
+            if col in df.columns:
+                date_col = col
+                break
+
+        item_col = None
+        for col in ["product_detail", "item", "product_type"]:
+            if col in df.columns:
+                item_col = col
+                break
+
+        qty_col = None
+        for col in ["transaction_qty", "quantity", "qty"]:
+            if col in df.columns:
+                qty_col = col
+                break
+
+        price_col = None
+        for col in ["unit_price", "price", "sales_amount"]:
+            if col in df.columns:
+                price_col = col
+                break
+
+        if date_col:
+            df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
+            df = df.dropna(subset=[date_col])
+
+            if start_date:
+                df = df[df[date_col] >= pd.to_datetime(start_date)]
+
+            if end_date:
+                df = df[df[date_col] <= pd.to_datetime(end_date)]
+
+        if df.empty:
+            return {
+                "total_sales": 0,
+                "best_selling_item": "No data",
+                "records": 0,
+                "demand_label": "no available"
+            }
+
+        if qty_col and price_col:
+            df["total_sales_calc"] = df[qty_col] * df[price_col]
+            total_sales = round(df["total_sales_calc"].sum(), 2)
+        elif qty_col:
+            total_sales = int(df[qty_col].sum())
+        else:
+            total_sales = len(df)
+
+        if item_col:
+            best_selling_item = str(df[item_col].value_counts().idxmax())
+        else:
+            best_selling_item = "No data"
+
+        if total_sales > 150:
+            demand_label = "stronger"
+        elif total_sales > 70:
+            demand_label = "moderate"
+        elif total_sales > 0:
+            demand_label = "lighter"
+        else:
+            demand_label = "no available"
+
+        return {
+            "total_sales": total_sales,
+            "best_selling_item": best_selling_item,
+            "records": len(df),
+            "demand_label": demand_label
+        }
+
 # -----------------------------
 # Routes
 # -----------------------------
@@ -595,6 +678,46 @@ def login():
             return render_template("login.html", error="Invalid username or password.")
 
     return render_template("login.html")
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        cafe_name = request.form.get("cafe_name")
+
+        if not username or not password or not cafe_name:
+            return render_template("register.html", error="Please fill in all fields.")
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        try:
+            existing_user = cursor.execute(
+                "SELECT * FROM users WHERE username = ?",
+                (username,)
+            ).fetchone()
+
+            if existing_user:
+                return render_template("register.html", error="Username already exists.")
+
+            password_hash = generate_password_hash(password)
+
+            cursor.execute(
+                "INSERT INTO users (username, password_hash, role, cafe_name) VALUES (?, ?, ?, ?)",
+                (username, password_hash, "staff", cafe_name)
+            )
+
+            conn.commit()
+            return redirect(url_for("login"))
+
+        except Exception as e:
+            return render_template("register.html", error=f"Could not create account: {str(e)}")
+
+        finally:
+            conn.close()
+
+    return render_template("register.html")
 
 
 @app.route("/dashboard")
@@ -644,6 +767,7 @@ def upload():
 
     save_path = os.path.join(app.config["UPLOAD_FOLDER"], file.filename)
     file.save(save_path)
+    app_data["latest_sales_file"] = save_path
 
     try:
         df = load_uploaded_file(save_path)
@@ -873,26 +997,48 @@ def report():
     if not is_logged_in():
         return redirect(url_for("login"))
 
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
+
+    filtered = get_filtered_report_data(start_date, end_date)
+
     return render_template(
         "report.html",
-        report_total_sales=app_data["report_total_sales"],
-        best_selling_item=app_data["best_selling_item"],
+        report_total_sales=filtered["total_sales"] if filtered else app_data["report_total_sales"],
+        best_selling_item=filtered["best_selling_item"] if filtered else app_data["best_selling_item"],
         prediction_accuracy=app_data["prediction_accuracy"],
         report_low_stock=app_data["report_low_stock"],
         report_restock=app_data["report_restock"],
+        demand_label=filtered["demand_label"] if filtered else None,
+        start_date=start_date,
+        end_date=end_date
     )
-
 
 @app.route("/download_report")
 def download_report():
     if not is_logged_in():
         return redirect(url_for("login"))
 
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
+
+    filtered = get_filtered_report_data(start_date, end_date)
+
+    total_sales = filtered["total_sales"] if filtered else app_data["report_total_sales"]
+    best_selling_item = filtered["best_selling_item"] if filtered else app_data["best_selling_item"]
+    records = filtered["records"] if filtered else "N/A"
+    demand_label = filtered["demand_label"] if filtered else "No data"
+
     report_text = f"""Metric,Value
+Start Date,{start_date or "All"}
+End Date,{end_date or "All"}
+Records Included,{records}
+Demand Overview,{demand_label}
 Predicted Sales,{app_data["predicted_sales"]}
 Prediction Summary,{app_data["prediction_summary"]}
 Prediction Accuracy,{app_data["prediction_accuracy"]}
-Best Selling Item,{app_data["best_selling_item"]}
+Filtered Total Sales,{total_sales}
+Best Selling Item,{best_selling_item}
 Low Stock Items,{app_data["report_low_stock"]}
 Recommended Restock,{app_data["report_restock"]}
 """
@@ -902,7 +1048,6 @@ Recommended Restock,{app_data["report_restock"]}
         mimetype="text/csv",
         headers={"Content-disposition": "attachment; filename=report.csv"}
     )
-
 
 @app.route("/logout")
 def logout():

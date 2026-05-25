@@ -10,7 +10,7 @@
 <div class="container">
     <div class="page-header">
     <div>
-        <p class="page-kicker">CastCAfe AI</p>
+        <p class="page-kicker">CastCafe AI</p>
         <h2>Report</h2>
         <p class="page-subtitle">Cafe Demand Prediction and Inventory Manager</p>
         <p class="page-description">Business summary of demand, stock condition, prediction quality, and recommended operational actions.</p>
@@ -98,8 +98,23 @@
         </div>
     </div>
 
+    <div class="card">
+        <h3>Filter Report by Date</h3>
+        <form action="/report" method="get" style="display:flex; gap:12px; flex-wrap:wrap; align-items:end;">
+            <div>
+                <label for="start_date"><strong>Start Date</strong></label>
+                <input type="date" id="start_date" name="start_date" value="{{ start_date if start_date else '' }}">
+            </div>
+            <div>
+                <label for="end_date"><strong>End Date</strong></label>
+                <input type="date" id="end_date" name="end_date" value="{{ end_date if end_date else '' }}">
+            </div>
+            <button type="submit">Apply Filter</button>
+        </form>
+    </div>
+
     <div class="report-actions">
-        <a class="btn-link" href="/download_report">Download Report</a>
+        <a class="btn-link" href="/download_report?start_date={{ start_date if start_date else '' }}&end_date={{ end_date if end_date else '' }}">Download Report</a>
     </div>
 </div>
 </body>

@@ -1,15 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CastCafe AI | Login</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='Styles.css') }}">
 </head>
 <body>
 <div class="container">
-    <h2>Login</h2>
+    <div class="page-header">
+        <div>
+            <p class="page-kicker">CastCafe AI</p>
+            <h2>Login</h2>
+            <p class="page-subtitle">Cafe Demand Prediction and Inventory Manager</p>
+            <p class="page-description">Sign in to access the dashboard, inventory, prediction, and report features.</p>
+        </div>
+    </div>
 
-    <div class="card">
-        <h3>Café AI-Assisted Demand Prediction & Inventory Manager</h3>
+    <div class="card" style="max-width: 520px; margin: 0 auto;">
+        <h3>Welcome Back</h3>
 
         <form method="post" action="/">
             <input type="text" name="username" placeholder="Username" required>
@@ -18,8 +27,14 @@
         </form>
 
         {% if error %}
-            <p class="success" style="color:red;">{{ error }}</p>
+            <div class="message-box error">
+                {{ error }}
+            </div>
         {% endif %}
+
+        <p style="text-align:center; margin-top:16px;">
+            Don’t have an account? <a href="/register">Create Account</a>
+        </p>
     </div>
 </div>
 </body>

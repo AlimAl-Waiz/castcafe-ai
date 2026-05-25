@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CastCafe AI | Create Account</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Styles.css') }}">
+</head>
+<body>
+<div class="container">
+    <div class="page-header">
+        <div>
+            <p class="page-kicker">CastCafe AI</p>
+            <h2>Create Account</h2>
+            <p class="page-subtitle">Cafe Demand Prediction and Inventory Manager</p>
+            <p class="page-description">Create a simple account to access the system.</p>
+        </div>
+    </div>
+
+    <div class="card" style="max-width: 520px; margin: 0 auto;">
+        <form action="/register" method="post">
+            <label for="username"><strong>Username</strong></label>
+            <input type="text" id="username" name="username" required>
+
+            <label for="password"><strong>Password</strong></label>
+            <input type="password" id="password" name="password" required>
+
+            <label for="cafe_name"><strong>Café Name</strong></label>
+            <input type="text" id="cafe_name" name="cafe_name" required>
+
+            <button type="submit">Create Account</button>
+        </form>
+
+        {% if error %}
+            <div class="message-box error" style="margin-top: 16px;">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <p style="margin-top: 16px; text-align: center;">
+            Already have an account? <a href="/">Back to Login</a>
+        </p>
+    </div>
+</div>
+</body>
+</html>
