@@ -652,6 +652,36 @@ if db_inventory:
             "demand_label": demand_label
         }
 
+def get_sales_date_range():
+    file_path = app_data.get("latest_sales_file")
+
+    if not file_path or not os.path.exists(file_path):
+        return None, None
+
+    df = load_uploaded_file(file_path)
+    df.columns = [str(col).strip().lower() for col in df.columns]
+
+    date_col = None
+    for col in ["transaction_date", "date", "order_date"]:
+        if col in df.columns:
+            date_col = col
+            break
+
+    if not date_col:
+        return None, None
+
+    df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
+    df = df.dropna(subset=[date_col])
+
+    if df.empty:
+        return None, None
+
+    min_date = df[date_col].min().strftime("%Y-%m-%d")
+    max_date = df[date_col].max().strftime("%Y-%m-%d")
+
+    return min_date, max_date
+
+
 # -----------------------------
 # Routes
 # -----------------------------
@@ -1022,34 +1052,6 @@ def report():
         print("REPORT ROUTE ERROR:", e)
         return f"Report error: {str(e)}", 500
 
-    def get_sales_date_range():
-        file_path = app_data.get("latest_sales_file")
-
-        if not file_path or not os.path.exists(file_path):
-            return None, None
-
-        df = load_uploaded_file(file_path)
-        df.columns = [str(col).strip().lower() for col in df.columns]
-
-        date_col = None
-        for col in ["transaction_date", "date", "order_date"]:
-            if col in df.columns:
-                date_col = col
-                break
-
-        if not date_col:
-            return None, None
-
-        df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
-        df = df.dropna(subset=[date_col])
-
-        if df.empty:
-            return None, None
-
-        min_date = df[date_col].min().strftime("%Y-%m-%d")
-        max_date = df[date_col].max().strftime("%Y-%m-%d")
-
-        return min_date, max_date
 
 @app.route("/download_report")
 def download_report():
@@ -1176,6 +1178,7 @@ def get_filtered_report_data(start_date=None, end_date=None):
 def logout():
     session.clear()
     return redirect(url_for("login"))
+
 
 
 if __name__ == "__main__":
