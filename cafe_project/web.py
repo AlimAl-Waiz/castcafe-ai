@@ -1002,21 +1002,54 @@ def report():
 
     try:
         filtered = get_filtered_report_data(start_date, end_date)
-    except Exception as e:
-        print("REPORT ERROR:", e)
-        filtered = None
+        min_date, max_date = get_sales_date_range()
 
-    return render_template(
-        "report.html",
-        report_total_sales=filtered["total_sales"] if filtered else app_data["report_total_sales"],
-        best_selling_item=filtered["best_selling_item"] if filtered else app_data["best_selling_item"],
-        prediction_accuracy=app_data["prediction_accuracy"],
-        report_low_stock=app_data["report_low_stock"],
-        report_restock=app_data["report_restock"],
-        demand_label=filtered["demand_label"] if filtered and "demand_label" in filtered else None,
-        start_date=start_date,
-        end_date=end_date
-    )
+        return render_template(
+            "report.html",
+            report_total_sales=filtered["total_sales"] if filtered else app_data.get("report_total_sales"),
+            best_selling_item=filtered["best_selling_item"] if filtered else app_data.get("best_selling_item"),
+            prediction_accuracy=app_data.get("prediction_accuracy"),
+            report_low_stock=app_data.get("report_low_stock"),
+            report_restock=app_data.get("report_restock"),
+            demand_label=filtered["demand_label"] if filtered and "demand_label" in filtered else None,
+            start_date=start_date,
+            end_date=end_date,
+            min_date=min_date,
+            max_date=max_date
+        )
+
+    except Exception as e:
+        print("REPORT ROUTE ERROR:", e)
+        return f"Report error: {str(e)}", 500
+
+    def get_sales_date_range():
+        file_path = app_data.get("latest_sales_file")
+
+        if not file_path or not os.path.exists(file_path):
+            return None, None
+
+        df = load_uploaded_file(file_path)
+        df.columns = [str(col).strip().lower() for col in df.columns]
+
+        date_col = None
+        for col in ["transaction_date", "date", "order_date"]:
+            if col in df.columns:
+                date_col = col
+                break
+
+        if not date_col:
+            return None, None
+
+        df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
+        df = df.dropna(subset=[date_col])
+
+        if df.empty:
+            return None, None
+
+        min_date = df[date_col].min().strftime("%Y-%m-%d")
+        max_date = df[date_col].max().strftime("%Y-%m-%d")
+
+        return min_date, max_date
 
 @app.route("/download_report")
 def download_report():
@@ -1056,7 +1089,13 @@ Recommended Restock,{app_data["report_restock"]}
 def get_filtered_report_data(start_date=None, end_date=None):
     file_path = app_data.get("latest_sales_file")
 
-    if not file_path or not os.path.exists(file_path):
+    print("LATEST SALES FILE:", file_path)
+
+    if not file_path:
+        return None
+
+    if not os.path.exists(file_path):
+        print("SALES FILE DOES NOT EXIST")
         return None
 
     df = load_uploaded_file(file_path)
