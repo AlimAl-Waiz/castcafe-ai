@@ -1000,7 +1000,11 @@ def report():
     start_date = request.args.get("start_date")
     end_date = request.args.get("end_date")
 
-    filtered = get_filtered_report_data(start_date, end_date)
+    try:
+        filtered = get_filtered_report_data(start_date, end_date)
+    except Exception as e:
+        print("REPORT ERROR:", e)
+        filtered = None
 
     return render_template(
         "report.html",
@@ -1009,7 +1013,7 @@ def report():
         prediction_accuracy=app_data["prediction_accuracy"],
         report_low_stock=app_data["report_low_stock"],
         report_restock=app_data["report_restock"],
-        demand_label=filtered["demand_label"] if filtered else None,
+        demand_label=filtered["demand_label"] if filtered and "demand_label" in filtered else None,
         start_date=start_date,
         end_date=end_date
     )
@@ -1048,6 +1052,86 @@ Recommended Restock,{app_data["report_restock"]}
         mimetype="text/csv",
         headers={"Content-disposition": "attachment; filename=report.csv"}
     )
+
+def get_filtered_report_data(start_date=None, end_date=None):
+    file_path = app_data.get("latest_sales_file")
+
+    if not file_path or not os.path.exists(file_path):
+        return None
+
+    df = load_uploaded_file(file_path)
+    df.columns = [str(col).strip().lower() for col in df.columns]
+
+    date_col = None
+    for col in ["transaction_date", "date", "order_date"]:
+        if col in df.columns:
+            date_col = col
+            break
+
+    item_col = None
+    for col in ["product_detail", "item", "product_type"]:
+        if col in df.columns:
+            item_col = col
+            break
+
+    qty_col = None
+    for col in ["transaction_qty", "quantity", "qty"]:
+        if col in df.columns:
+            qty_col = col
+            break
+
+    price_col = None
+    for col in ["unit_price", "price", "sales_amount"]:
+        if col in df.columns:
+            price_col = col
+            break
+
+    if date_col:
+        df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
+        df = df.dropna(subset=[date_col])
+
+        if start_date:
+            df = df[df[date_col] >= pd.to_datetime(start_date)]
+
+        if end_date:
+            df = df[df[date_col] <= pd.to_datetime(end_date)]
+
+    if df.empty:
+        return {
+            "total_sales": 0,
+            "best_selling_item": "No data",
+            "records": 0,
+            "demand_label": "no available"
+        }
+
+    if qty_col and price_col:
+        df["total_sales_calc"] = df[qty_col] * df[price_col]
+        total_sales = round(df["total_sales_calc"].sum(), 2)
+    elif qty_col:
+        total_sales = int(df[qty_col].sum())
+    else:
+        total_sales = len(df)
+
+    if item_col:
+        best_selling_item = str(df[item_col].value_counts().idxmax())
+    else:
+        best_selling_item = "No data"
+
+    if total_sales > 150:
+        demand_label = "stronger"
+    elif total_sales > 70:
+        demand_label = "moderate"
+    elif total_sales > 0:
+        demand_label = "lighter"
+    else:
+        demand_label = "no available"
+
+    return {
+        "total_sales": total_sales,
+        "best_selling_item": best_selling_item,
+        "records": len(df),
+        "demand_label": demand_label
+    }
 
 @app.route("/logout")
 def logout():
